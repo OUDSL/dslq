@@ -30,7 +30,7 @@ def search_stats(index,doctype,query):
     data = es_retun_all(Elasticsearch(ES_HOST),query,index,doctype)
     df = pd.DataFrame(data['hits']['hits'])
     #Save results to csv
-    df.to_csv("{0}/es_query_data.csv".format(resultDir)
+    df.to_csv("{0}/es_query_data.csv".format(resultDir))
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
 
 
