@@ -5,7 +5,7 @@ import requests
 from elastic_search import es_get, es_search
 from elasticsearch import Elasticsearch
 import pandas as pd
-
+import os
 #Default base directory 
 basedir="/data/web_data/static"
 ES_HOST = [{'host':'localhost'}]
