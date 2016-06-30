@@ -1,4 +1,4 @@
-Cybercom Queue
+Cybercom  DSL Queue
 ====
 
-Example Cybercom task queue. Good starting repo for various asynchronous tasks. 
+DSL queue for statistics on Victoria congressional hearing data. 
