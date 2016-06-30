@@ -8,7 +8,7 @@ import pandas as pd
 import os
 #Default base directory 
 basedir="/data/web_data/static"
-ES_HOST = [{'host':'localhost'}]
+ES_HOST = [{'host':'esearch'}]
 
 #Example task
 @task()
