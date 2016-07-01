@@ -37,7 +37,7 @@ def search_stats(index,doctype,query):
 
 def es_retun_all(es,query,index,doctype):
     data = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
-    total_count = data['hits']['hits']['total']
+    total_count = data['hits']['total']
     data = es_search(es, index, doctype, query=query, page=1, nPerPage=total_count)
     return data
     
