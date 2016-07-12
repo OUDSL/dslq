@@ -27,18 +27,20 @@ def search_stats(index,doctype,query,context_pages=5):
     resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
     os.makedirs(resultDir)
     #Get ES dataset
-    meta, result = es_retun_all(Elasticsearch(ES_HOST),query,index,doctype,context_pages)
+    result = es_retun_all(Elasticsearch(ES_HOST),query,index,doctype,context_pages)
     df = pd.DataFrame(result)
     #Save results to csv
     df.to_csv("{0}/es_query_data.csv".format(resultDir),index=False)
+    #save dataframe pickle to file
+    df.to_pickle("{0}/es_query_data.pkl".format(resultDir))
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
 
 
 
 def es_retun_all(es,query,index,doctype,context_pages):
-    meta = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
+    #meta = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
 
     result = es_helper_scan(es,index,doctype,query,context_pages)
 
-    return meta,result
+    return result
     

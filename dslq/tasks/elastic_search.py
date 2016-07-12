@@ -39,7 +39,20 @@ def es_helper_scan(es_client,index,doc_type,query,context_pages):
             metadata = ''
             if mdata['hits']['total']>0:
                 metadata = mdata['hits']['hits'][0]['_source']
-            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'metadata':metadata})        
+                title=metadata.get('title',None)
+                congress=metadata.get('congress',None)
+                chamber=metadata.get('chamber',None)
+                committee = metadata.get('committee',None)
+                member=[]
+                for name in metadata.get('members',[]):
+                    member.append(name.get('name',None))
+                held_date= metadata.get('held_date',None)
+                session=metadata.get('session',None)
+                score =itm.get('_score',None)
+                index = itm.get('_index',None)
+                types= itm.get('_type',None)
+            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':congress,'CHAMBER':chamber,
+                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})        
         else:
             result.append(itm)
     return result
