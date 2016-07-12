@@ -34,7 +34,12 @@ def es_helper_scan(es_client,index,doc_type,query,context_pages):
                 if item['found']==True:
                     if item['_source']['TAG']== itm['_source']['TAG']:
                         temp=temp + item['_source']['DATA']
-            result.append({'TAG':itm['_source']['TAG'],'DATA':temp})        
+            mquery = {'query':{'match':{'TAG':{'query':itm['_source']['TAG'],'operator':'and'}}}}
+            mdata=es_search(es,index,'metadata',query=mquery)
+            metadata = ''
+            if mdata['hits']['total']>0:
+                metadata = mdata['hits']['hits'][0]['_source']
+            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'metadata':metadata})        
         else:
             result.append(itm)
     return result
