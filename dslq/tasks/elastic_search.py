@@ -19,14 +19,24 @@ def es_search(es_client, index, doc_type, query=None, page=1, nPerPage=10): #, u
     data = es.search(index=index,doc_type=doc_type,from_=offset,size=nPerPage, body=query)
     return data
 
-def es_helper_scan(es_client,index,doc_type,query):
+def es_helper_scan(es_client,index,doc_type,query,context_pages):
     es = es_client
     #setup es query params
     query = ast.literal_eval(str(query))
     data = helpers.scan(es,index=index,doc_type=doc_type,query=query,preserve_order=True)
     result=[]
     for itm in data:
-        result.append(itm)
+        if context_pages >0:
+            ids = list(range(int(itm['_id'])-context_pages,int(itm['_id'])+context_pages+1))
+            str_ids = [str(x) for x in ids]
+            temp=''
+            for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
+                if item['found']==True:
+                    if item['_source']['TAG']== itm['_source']['TAG']:
+                        temp=temp + item['_source']['DATA']
+            result.append({'TAG':itm['_source']['TAG'],'DATA':temp})        
+        else:
+            result.append(itm)
     return result
 
 def find_offset(count,page,nPerPage):
