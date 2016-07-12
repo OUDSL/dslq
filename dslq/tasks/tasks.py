@@ -2,7 +2,7 @@ from celery.task import task
 from dockertask import docker_task
 from subprocess import call,STDOUT
 import requests
-from elastic_search import es_get, es_search
+from elastic_search import es_get, es_search, es_helper_scan
 from elasticsearch import Elasticsearch
 import pandas as pd
 import os
