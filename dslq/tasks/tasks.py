@@ -38,7 +38,7 @@ def search_stats(index,doctype,query):
 def es_retun_all(es,query,index,doctype):
     meta = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
 
-    result = es_helper_scan(es,index,doc_type,query)
+    result = es_helper_scan(es,index,doctype,query)
 
     return meta,result
     
