@@ -30,7 +30,7 @@ def search_stats(index,doctype,query,context_pages=5):
     result = es_retun_all(Elasticsearch(ES_HOST),query,index,doctype,context_pages)
     df = pd.DataFrame(result)
     #Save results to csv
-    df.to_csv("{0}/es_query_data.csv".format(resultDir),index=False)
+    df.to_csv("{0}/es_query_data.csv".format(resultDir),encoding='utf-8')
     #save dataframe pickle to file
     df.to_pickle("{0}/es_query_data.pkl".format(resultDir))
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
