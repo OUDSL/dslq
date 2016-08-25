@@ -19,6 +19,15 @@ def add(x, y):
     """
     result = x + y
     return result
+    
+@task()
+def sub(x, y):
+    """ Example task that subtracts two numbers
+        args: x and y
+        return subtraction
+    """
+    result = x - y
+    return result
 
 @task()
 def search_stats(index,doctype,query,context_pages=5):
