@@ -7,6 +7,13 @@ from elasticsearch import Elasticsearch
 import pandas as pd
 import os
 from pymongo import MongoClient
+import json
+import re
+from urllib import urlopen
+from urlparse import urlparse, parse_qs
+from bs4 import BeautifulSoup
+from xmltodict import parse
+
 #Default base directory 
 basedir="/data/web_data/static"
 ES_HOST = [{'host':'esearch'}]
