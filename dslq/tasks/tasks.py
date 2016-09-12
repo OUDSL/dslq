@@ -19,6 +19,7 @@ basedir="/data/web_data/static"
 ES_HOST = [{'host':'esearch'}]
 
 mainURL="https://www.gpo.gov"
+filterLinks=[]
 
 #Example task
 @task()
@@ -161,7 +162,6 @@ def morePageLinks(url):
     test = url
     r = urlopen(test)
     soup = BeautifulSoup(r,"html.parser")
-    filterLinks=[]
     # print soup.prettify()
     for i in soup.findAll('a'):
         if i.get('href')!=None and "search/page" in i.get('href'):
