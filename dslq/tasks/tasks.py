@@ -1,6 +1,7 @@
 from celery.task import task
 from dockertask import docker_task
 from subprocess import call,STDOUT
+from time import sleep
 import requests
 from elastic_search import es_get, es_search, es_helper_scan
 from elasticsearch import Elasticsearch
@@ -214,8 +215,13 @@ def morePageLinks(url):
 
 
 def get_chrg_ids(page=1,congress=99):
-    r=s.get(url_template.format(page,congress))
-    soup=BeautifulSoup(r.text,'html.parser')
+    try:
+        r=s.get(url_template.format(page,congress))
+        soup=BeautifulSoup(r.text,'html.parser')
+    except:
+        sleep(15)
+        r=s.get(url_template.format(page,congress))
+        soup=BeautifulSoup(r.text,'html.parser')
     links=[]
     for link in soup.findAll('a'):
         if link.get('href'):
