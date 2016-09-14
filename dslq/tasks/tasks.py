@@ -235,12 +235,13 @@ def get_chrg_ids(s,url_template,page=1,congress=99):
         if link.get('href'):
             links.append(link.get('href'))
     print "Total Links: %d" % (len(links))
+    print links
     valid_ids=[]
     for link in links:
         end_url=link.split('/')[-1]
         if re.match('^CHRG*',end_url):
             valid_ids.append(end_url.split('.p')[0])
-    print "Total Valid Links: %d" % (len(links))
+    print "Total Valid Links: %d" % (len(valid_ids))
     return valid_ids
 
 def get_ids(s,url_template,congress):
