@@ -255,11 +255,14 @@ def get_ids(congress):
 def modsParser(tag,url):
     xmlURL = url
     r = s.get(xmlURL)
-    data = parse(r.text)
-    data["tag"]=tag
-    x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
-    db = MongoClient("dsl_search_mongo",27017)
-    db.congressional.hearings.save(x)
+    try:
+        data = parse(r.text)
+        data["tag"]=tag
+        x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
+        db = MongoClient("dsl_search_mongo",27017)
+        db.congressional.hearings.save(x)
+    except:
+        print "ERROR: %s %s" %  (tag,url) 
 
 
 
