@@ -22,7 +22,6 @@ mainURL="https://www.gpo.gov"
 filterLinks=[]
 
 modsURL_template =  "https://www.gpo.gov/fdsys/pkg/{0}/mods.xml"
-total_ids=[]
 
 # page and congress
 url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection%3aCHRG&st=collection%3aCHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
@@ -60,6 +59,7 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 
 @task()
 def get_congressional_data():
+    total_ids=[]
     for cong in range(99,115):
         total_ids =total_ids + get_ids(cong)
 
