@@ -245,7 +245,7 @@ def morePageLinks(url):
                 parseURL = urlparse(url)
                 id = parse_qs(parseURL.query)['packageId'][0]
                 modsURL =  "https://www.gpo.gov/fdsys/pkg/"+id+"/mods.xml"
-                modsParser(id,modsURL)
+                mParser(id,modsURL)
 
 
 def get_chrg_ids(s,url_template,page=1,congress=99):
@@ -279,6 +279,15 @@ def get_ids(s,url_template,congress):
         cum_ids = cum_ids + ids
     return cum_ids
 
+
+
+def mParser(tag,url):
+    r = s.get(url)
+    data = parse(r.text)
+    data["tag"] = tag
+    x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
+    db = MongoClient("dsl_search_mongo",27017)
+    db.congressional.srihearings.save(x)
 
 def modsParser(s,tag,url):
     xmlURL = url
