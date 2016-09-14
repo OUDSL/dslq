@@ -53,18 +53,18 @@ def sub(x, y):
 
 @task()
 def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collection.action?collectionCode=CHRG&browsePath=114&isCollapsed=true&leafLevelBrowse=false&ycord=0"):
-	mainLinks(hearingsURL)
-	return "Success!! :D :P"
+    mainLinks(hearingsURL)
+    return "Success!! :D :P"
 
 
 
 @task()
 def get_congressional_data():
-	for cong in range(99,115):
-    	ctotal_ids =total_ids + get_ids(cong)
+    for cong in range(99,115):
+        total_ids =total_ids + get_ids(cong)
 
-	for chrg in total_ids:
-    	modsParser(chrg,modsURL_template.format(chrg))
+    for chrg in total_ids:
+        modsParser(chrg,modsURL_template.format(chrg))
 
 	
 
