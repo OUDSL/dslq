@@ -24,14 +24,6 @@ filterLinks=[]
 
 modsURL_template =  "https://www.gpo.gov/fdsys/pkg/{0}/mods.xml"
 
-# page and congress
-url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection%3aCHRG&st=collection%3aCHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
-
-# Session will work better to store connection state. Cookies!
-s = requests.Session()
-#load base page and setup session
-s.get("https://www.gpo.gov/fdsys/")
-
 #Example task
 @task()
 def add(x, y):
@@ -61,13 +53,18 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 @task()
 def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=True):
     """Congressional Hearing Inventory task
-        Agrs: congress (Valid number between 99 -114)
-        kwargs: congress=<None> # This will run all congresses.
+        Agrs: 
+        kwargs: congress=<None> # This will run all congresses. Valid values is 99-114 to run individual 
                 mongo_database=<'congressional'>, 
                 mongo_collection=<'hearings'>, 
                 update=<True>
         If update = False will inventory entire congressional hearins. Must delete records in mongo. Task does not check of record exists.
     """
+    # Session will work better to store connection state. Cookies!
+    s = requests.Session()
+    #load base page and setup session
+    s.get("https://www.gpo.gov/fdsys/")
+    url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection%3aCHRG&st=collection%3aCHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
     total_ids=[]
     db = MongoClient("dsl_search_mongo",27017)
     #db.congressional.hearings.save(x)
@@ -75,25 +72,25 @@ def get_congressional_data(congress=None, mongo_database="congressional",mongo_c
         """ Just pull first page of congressional hearing search"""
         if congress:
             #for cong in range(99,115):
-            total_ids =total_ids + get_chrg_ids(page=1,congress=congress)
+            total_ids =total_ids + get_chrg_ids(s,url_template,page=1,congress=congress)
         else:   
             for cong in range(99,115):
-                total_ids =total_ids + get_chrg_ids(page=1,congress=cong)
-        print "Total IDs returned %d" % (len(total_ids))
+                total_ids =total_ids + get_chrg_ids(s,url_template,page=1,congress=cong)
+        print "Update Total IDs returned %d" % (len(total_ids))
         for chrg in total_ids:
             if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
-                modsParser(chrg,modsURL_template.format(chrg))
+                modsParser(s,chrg,modsURL_template.format(chrg))
     else:  
         """ Run entire inventory """
         if congress:
-            total_ids =total_ids + get_ids(congress)
+            total_ids =total_ids + get_ids(s,url_template,congress)
         else:
             for cong in range(99,115):
-                total_ids =total_ids + get_ids(congress)
-        print "Total IDs returned %d" % (len(total_ids))
+                total_ids =total_ids + get_ids(s,url_template,congress)
+        print "All Total IDs returned %d" % (len(total_ids))
         for chrg in total_ids:
             if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
-                modsParser(chrg,modsURL_template.format(chrg))
+                modsParser(s,chrg,modsURL_template.format(chrg))
 
 	
 
@@ -225,7 +222,7 @@ def morePageLinks(url):
                 modsParser(id,modsURL)
 
 
-def get_chrg_ids(page=1,congress=99):
+def get_chrg_ids(s,url_template,page=1,congress=99):
     try:
         r=s.get(url_template.format(page,congress))
         soup=BeautifulSoup(r.text,'html.parser')
@@ -237,14 +234,16 @@ def get_chrg_ids(page=1,congress=99):
     for link in soup.findAll('a'):
         if link.get('href'):
             links.append(link.get('href'))
+    print "Total Links: %d" % (len(links))
     valid_ids=[]
     for link in links:
         end_url=link.split('/')[-1]
         if re.match('^CHRG*',end_url):
             valid_ids.append(end_url.split('.p')[0])
+    print "Total Valid Links: %d" % (len(links))
     return valid_ids
 
-def get_ids(congress):
+def get_ids(s,url_template,congress):
     cum_ids=[]
     for itm in range(1,1000):
         ids = get_chrg_ids(page=itm,congress=congress)
@@ -254,7 +253,7 @@ def get_ids(congress):
     return cum_ids
 
 
-def modsParser(tag,url):
+def modsParser(s,tag,url):
     xmlURL = url
     r = s.get(xmlURL)
     try:
