@@ -59,12 +59,13 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 
 
 @task()
-def get_congressional_data(congress, mongo_database="congressional",mongo_collection="hearings",update=True):
+def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=True):
     """Congressional Hearing Inventory task
         Agrs: congress (Valid number between 99 -114)
-        kwargs: mongo_database=<string> Default = 'congressional', 
-                mongo_collection=<string> Default = 'hearings', 
-                update=<boolean> default = True
+        kwargs: congress=<None> # This will run all congresses.
+                mongo_database=<'congressional'>, 
+                mongo_collection=<'hearings'>, 
+                update=<True>
         If update = False will inventory entire congressional hearins. Must delete records in mongo. Task does not check of record exists.
     """
     total_ids=[]
@@ -72,17 +73,24 @@ def get_congressional_data(congress, mongo_database="congressional",mongo_collec
     #db.congressional.hearings.save(x)
     if update:
         """ Just pull first page of congressional hearing search"""
-        #for cong in range(99,115):
-        total_ids =total_ids + get_chrg_ids(page=1,congress=congress)
+        if congress:
+            #for cong in range(99,115):
+            total_ids =total_ids + get_chrg_ids(page=1,congress=congress)
+        else:   
+            for cong in range(99,115):
+                total_ids =total_ids + get_chrg_ids(page=1,congress=cong)
         for chrg in total_ids:
             if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
                 modsParser(chrg,modsURL_template.format(chrg))
     else:  
         """ Run entire inventory """
-        total_ids =total_ids + get_ids(congress)
-
+        if congress:
+            total_ids =total_ids + get_ids(congress)
+        else:
+            for cong in range(99,115):
+                total_ids =total_ids + get_ids(congress)
         for chrg in total_ids:
-            modsParser(chrg,modsURL_template.format(chrg))
+             modsParser(chrg,modsURL_template.format(chrg))
 
 	
 
