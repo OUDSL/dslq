@@ -79,6 +79,7 @@ def get_congressional_data(congress=None, mongo_database="congressional",mongo_c
         else:   
             for cong in range(99,115):
                 total_ids =total_ids + get_chrg_ids(page=1,congress=cong)
+        print "Total IDs returned %d" % (len(total_ids))
         for chrg in total_ids:
             if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
                 modsParser(chrg,modsURL_template.format(chrg))
@@ -89,6 +90,7 @@ def get_congressional_data(congress=None, mongo_database="congressional",mongo_c
         else:
             for cong in range(99,115):
                 total_ids =total_ids + get_ids(congress)
+        print "Total IDs returned %d" % (len(total_ids))
         for chrg in total_ids:
             if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
                 modsParser(chrg,modsURL_template.format(chrg))
