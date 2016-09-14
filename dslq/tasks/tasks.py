@@ -18,7 +18,7 @@ from xmltodict import parse
 basedir="/data/web_data/static"
 ES_HOST = [{'host':'esearch'}]
 
-# mainURL="https://www.gpo.gov"
+mainURL="https://www.gpo.gov"
 filterLinks=[]
 
 #Example task
