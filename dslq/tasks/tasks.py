@@ -58,9 +58,9 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 
 
 @task()
-def get_congressional_data(mongo_database="congressional",mongo_collection="hearings",update=True):
+def get_congressional_data(congress, mongo_database="congressional",mongo_collection="hearings",update=True):
     """Congressional Hearing Inventory task
-        Agrs: None
+        Agrs: congress (Valid number between 99 -114)
         kwargs: mongo_database=<string> Default = 'congressional', 
                 mongo_collection=<string> Default = 'hearings', 
                 update=<boolean> default = True
@@ -71,15 +71,14 @@ def get_congressional_data(mongo_database="congressional",mongo_collection="hear
     #db.congressional.hearings.save(x)
     if update:
         """ Just pull first page of congressional hearing search"""
-        for cong in range(99,115):
-            total_ids =total_ids + get_chrg_ids(page=1,congress=cong
+        #for cong in range(99,115):
+        total_ids =total_ids + get_chrg_ids(page=1,congress=congress)
         for chrg in total_ids:
             if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
                 modsParser(chrg,modsURL_template.format(chrg))
     else:  
         """ Run entire inventory """
-        for cong in range(99,115):
-            total_ids =total_ids + get_ids(cong)
+        total_ids =total_ids + get_ids(congress)
 
         for chrg in total_ids:
             modsParser(chrg,modsURL_template.format(chrg))
