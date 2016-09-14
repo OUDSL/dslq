@@ -90,7 +90,8 @@ def get_congressional_data(congress=None, mongo_database="congressional",mongo_c
             for cong in range(99,115):
                 total_ids =total_ids + get_ids(congress)
         for chrg in total_ids:
-             modsParser(chrg,modsURL_template.format(chrg))
+            if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
+                modsParser(chrg,modsURL_template.format(chrg))
 
 	
 
