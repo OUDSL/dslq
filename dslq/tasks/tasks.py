@@ -21,7 +21,7 @@ ES_HOST = [{'host':'esearch'}]
 
 mainURL="https://www.gpo.gov"
 filterLinks=[]
-
+s= requests.session()
 modsURL_template =  "https://www.gpo.gov/fdsys/pkg/{0}/mods.xml"
 
 #Example task
@@ -120,10 +120,14 @@ def es_retun_all(es,query,index,doctype,context_pages):
 
 
 def mainLinks(hearingsURL):
+    try:
+        r = s.get(hearingsURL)
+        soup = BeautifulSoup(r.text,'html.parser')
+    except:
+        sleep(15)
+        r = s.get(hearingsURL)
+        soup = BeautifulSoup(r.text,'html.parser')
 
-    r = s.get(hearingsURL)
-
-    soup = BeautifulSoup(r.text,'html.parser')
 
     test = soup.findAll('input',{"name":"urlhid"})
 
@@ -137,9 +141,13 @@ def level1(url):
 #This is for getting links for HOUSE || JOINT || SENATE
     # test = "https://www.gpo.gov/fdsys/browse/collection.action?collectionCode=CHRG&browsePath=113&isCollapsed=false&leafLevelBrowse=false"
     test = url
-    r = s.get(test)
-
-    soup = BeautifulSoup(r.text,"html.parser")
+    try:
+        r = s.get(test)
+        soup = BeautifulSoup(r.text,"html.parser")
+    except:
+        sleep(15)
+        r = s.get(test)
+        soup = BeautifulSoup(r.text,"html.parser")
 
     # print soup.prettify()
 
@@ -167,9 +175,14 @@ def level1(url):
 def level2(url):
     # test = "https://www.gpo.gov/fdsys/browse/collection.action?collectionCode=CHRG&browsePath=114%2FHOUSE&isCollapsed=false&leafLevelBrowse=false"
     test = url
-    r = s.get(test)
+    try:
+        r = s.get(test)
+        soup = BeautifulSoup(r.text,"html.parser")
+    except:
+        sleep(15)
+        r = s.get(test)
+        soup = BeautifulSoup(r.text,"html.parser")
 
-    soup = BeautifulSoup(r.text,"html.parser")
 
     filteredDiv = []
     for i in soup('div'):
@@ -195,9 +208,16 @@ def level2(url):
 def level3(url):
     # test ="https://www.gpo.gov/fdsys/browse/collection.action?collectionCode=CHRG&browsePath=114%2FHOUSE&isCollapsed=false&leafLevelBrowse=false"
     test = url
-    r = s.get(test)
+    try:
+        r = s.get(test)
 
-    soup = BeautifulSoup(r.text,"html.parser")
+        soup = BeautifulSoup(r.text,"html.parser")
+    except:
+        sleep(15)
+        r = s.get(test)
+
+        soup = BeautifulSoup(r.text,"html.parser")
+
 
     for i in soup.findAll('div', class_="level3"):
         for j in i('a'):
@@ -208,8 +228,14 @@ def level3(url):
 def morePageLinks(url):
     # test = "https://www.gpo.gov/fdsys/browse/collection.action?collectionCode=CHRG&browsePath=114%2FHOUSE%2FCommission+on+Security+and+Cooperation+in+Europe&isCollapsed=false&leafLevelBrowse=false&isDocumentResults=true"
     test = url
-    r = s.get(test)
-    soup = BeautifulSoup(r.text,"html.parser")
+    try:
+        r = s.get(test)
+        soup = BeautifulSoup(r.text,"html.parser")
+    except:
+        sleep(15)
+        r = s.get(test)
+        soup = BeautifulSoup(r.text,"html.parser")
+
     # print soup.prettify()
     for i in soup.findAll('a'):
         if i.get('href')!=None and "search/page" in i.get('href'):
@@ -262,7 +288,7 @@ def modsParser(s,tag,url):
         data["tag"]=tag
         x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
         db = MongoClient("dsl_search_mongo",27017)
-        db.congressional.hearings.save(x)
+        db.congressional.srihearings.save(x)
     except:
         print "ERROR: %s %s" %  (tag,url) 
 
