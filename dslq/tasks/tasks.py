@@ -246,7 +246,7 @@ def get_chrg_ids(s,url_template,page=1,congress=99):
 def get_ids(s,url_template,congress):
     cum_ids=[]
     for itm in range(1,1000):
-        ids = get_chrg_ids(page=itm,congress=congress)
+        ids = get_chrg_ids(s,url_template,page=itm,congress=congress)
         if ids==[]:
             break
         cum_ids = cum_ids + ids
