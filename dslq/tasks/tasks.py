@@ -58,13 +58,31 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 
 
 @task()
-def get_congressional_data():
+def get_congressional_data(mongo_database="congressional",mongo_collection="hearings",update=True):
+    """Congressional Hearing Inventory task
+        Agrs: None
+        kwargs: mongo_database=<string> Default = 'congressional', 
+                mongo_collection=<string> Default = 'hearings', 
+                update=<boolean> default = True
+        If update = False will inventory entire congressional hearins. Must delete records in mongo. Task does not check of record exists.
+    """
     total_ids=[]
-    for cong in range(99,115):
-        total_ids =total_ids + get_ids(cong)
+    db = MongoClient("dsl_search_mongo",27017)
+    #db.congressional.hearings.save(x)
+    if update:
+        """ Just pull first page of congressional hearing search"""
+        for cong in range(99,115):
+            total_ids =total_ids + get_chrg_ids(page=1,congress=cong
+        for chrg in total_ids:
+            if db[mongo_database][mongo_collection].find({'tag':chrg}).count() < 1:
+                modsParser(chrg,modsURL_template.format(chrg))
+    else:  
+        """ Run entire inventory """
+        for cong in range(99,115):
+            total_ids =total_ids + get_ids(cong)
 
-    for chrg in total_ids:
-        modsParser(chrg,modsURL_template.format(chrg))
+        for chrg in total_ids:
+            modsParser(chrg,modsURL_template.format(chrg))
 
 	
 
