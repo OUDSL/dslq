@@ -20,7 +20,17 @@ ES_HOST = [{'host':'esearch'}]
 
 mainURL="https://www.gpo.gov"
 filterLinks=[]
+
+modsURL_template =  "https://www.gpo.gov/fdsys/pkg/{0}/mods.xml"
+total_ids=[]
+
+# page and congress
+url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection%3aCHRG&st=collection%3aCHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
+
+# Session will work better to store connection state. Cookies!
 s = requests.Session()
+#load base page and setup session
+s.get("https://www.gpo.gov/fdsys/")
 
 #Example task
 @task()
@@ -46,6 +56,17 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 	mainLinks(hearingsURL)
 	return "Success!! :D :P"
 
+
+
+@task()
+def get_congressional_data():
+	for cong in range(99,115):
+    	ctotal_ids =total_ids + get_ids(cong)
+
+	for chrg in total_ids:
+    	modsParser(chrg,modsURL_template.format(chrg))
+
+	
 
 @task()
 def search_stats(index,doctype,query,context_pages=5):
@@ -174,7 +195,31 @@ def morePageLinks(url):
                 modsURL =  "https://www.gpo.gov/fdsys/pkg/"+id+"/mods.xml"
                 modsParser(id,modsURL)
 
-#Parses the mods.xml files
+
+def get_chrg_ids(page=1,congress=99):
+    r=s.get(url_template.format(page,congress))
+    soup=BeautifulSoup(r.text,'html.parser')
+    links=[]
+    for link in soup.findAll('a'):
+        if link.get('href'):
+            links.append(link.get('href'))
+    valid_ids=[]
+    for link in links:
+        end_url=link.split('/')[-1]
+        if re.match('^CHRG*',end_url):
+            valid_ids.append(end_url.split('.p')[0])
+    return valid_ids
+
+def get_ids(congress):
+    cum_ids=[]
+    for itm in range(1,1000):
+        ids = get_chrg_ids(page=itm,congress=congress)
+        if ids==[]:
+            break
+        cum_ids = cum_ids + ids
+    return cum_ids
+
+
 def modsParser(tag,url):
     xmlURL = url
     r = s.get(xmlURL)
@@ -183,5 +228,6 @@ def modsParser(tag,url):
     x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
     db = MongoClient("dsl_search_mongo",27017)
     db.congressional.hearings.save(x)
-    # print json.dumps(json.loads(x),indent=4)
+
+
 
