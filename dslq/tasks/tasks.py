@@ -282,8 +282,14 @@ def get_ids(s,url_template,congress):
 
 
 def mParser(tag,url):
-    r = s.get(url)
-    data = parse(r.text)
+    try:
+        r = s.get(url)
+        t = r.text
+    except:
+	sleep(15)
+	r = s.get(url)
+	t = r.text
+    data = parse(t)
     data["tag"] = tag
     x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
     db = MongoClient("dsl_search_mongo",27017)
