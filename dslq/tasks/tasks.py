@@ -14,6 +14,7 @@ from urllib import urlopen
 from urlparse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 from xmltodict import parse
+from subprocess import call
 
 #Default base directory 
 basedir="/data/web_data/static"
@@ -48,8 +49,15 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
     mainLinks(hearingsURL)
     return "Success!! :D :P"
 
-
-
+@task()
+def get_cong_data_python3():
+    task_id = str(get_cong_data_python3.request.id)
+    #create Result Directory
+    resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
+    os.makedirs(resultDir)
+    call["/anaconda3/gpo/mods.py","99","115","{0}/log.txt".format(resultDir)])
+    return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
+    
 @task()
 def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=None):
     """Congressional Hearing Inventory task
