@@ -51,20 +51,20 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
 
 
 @task()
-def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=True):
+def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=None):
     """Congressional Hearing Inventory task
         Agrs: 
         kwargs: congress=<None> # This will run all congresses. Valid values is 99-114 to run individual 
                 mongo_database=<'congressional'>, 
                 mongo_collection=<'hearings'>, 
-                update=<True>
+                update=<None> # this will run through all hearings
         If update = False will inventory entire congressional hearins. Must delete records in mongo. Task does not check of record exists.
     """
     # Session will work better to store connection state. Cookies!
     s = requests.Session()
     #load base page and setup session
     s.get("https://www.gpo.gov/fdsys/")
-    url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection%3aCHRG&st=collection%3aCHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
+    url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection:CHRG&st=collection:CHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
     total_ids=[]
     db = MongoClient("dsl_search_mongo",27017)
     #db.congressional.hearings.save(x)
@@ -261,7 +261,7 @@ def get_chrg_ids(s,url_template,page=1,congress=99):
         if link.get('href'):
             links.append(link.get('href'))
     print "Total Links: %d" % (len(links))
-    print links
+    #print links
     valid_ids=[]
     for link in links:
         end_url=link.split('/')[-1]
