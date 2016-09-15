@@ -55,7 +55,7 @@ def get_cong_data_python3():
     #create Result Directory
     resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
     os.makedirs(resultDir)
-    call["/anaconda3/gpo/mods.py","99","115","{0}/log.txt".format(resultDir)])
+    call(["/anaconda3/gpo/mods.py","99","115","{0}/log.txt".format(resultDir)])
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
     
 @task()
