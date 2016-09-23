@@ -50,12 +50,17 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
     return "Success!! :D :P"
 
 @task()
-def get_cong_data_python3():
+def get_cong_data_python3(start="99",end="115"):
+    """Python 3 script to pull congressional hearings from gpo website.
+       args: 
+       kwargs: start="99" - starting congressional session (string)
+               end="115" - end congressional session default one more then wanted max 114 so default is 115 (string)
+    """
     task_id = str(get_cong_data_python3.request.id)
     #create Result Directory
     resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
     os.makedirs(resultDir)
-    call(["/anaconda3/gpo/mods.py","99","115","{0}/log.txt".format(resultDir)])
+    call(["/anaconda3/gpo/mods.py",start,end,"{0}/log.txt".format(resultDir)])
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
     
 @task()
