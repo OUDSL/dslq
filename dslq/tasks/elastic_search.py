@@ -70,3 +70,16 @@ def find_offset(count,page,nPerPage):
         page = 1
     offset = (page - 1) * nPerPage
     return page,offset
+
+def es_insert(esindex,estype,data,es_client):
+    es = es_client
+    try:
+        temp=es.search(index=esindex, doc_type=estype, size=0)
+        id_start=temp['hits']['total'] + 1
+    except:
+        id_start=1
+    inserted =0
+    es.index(index=esindex, doc_type=estype, id=id_start, body=data)
+    # id_start +=1
+    # inserted +=1
+    # return id_start - 1, inserted
