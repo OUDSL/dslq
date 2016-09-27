@@ -358,8 +358,7 @@ def htmlparser(testURL):
         # print "TITLE : ",title," DATE : ",h_date.upper()," URL : ",url,"TAG : ",tag
         if url=="":
             # print json.dumps({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
-            x=json.dumps({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
-            db.congressional.inventory.save(x)
+            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
             break
 
         try:
@@ -377,14 +376,12 @@ def htmlparser(testURL):
         if line_count < 10 and flag != tag:
             flag=tag
             # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
-            x=json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
-            db.congressional.inventory.save(x)
+            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
         else:
             if flag != tag:
                 flag = tag
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
-                x = json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
-                db.congressional.inventory.save(x)
+                db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
             for x in requiredDataList:
-                data=json.dumps({'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate})
-                es_insert("hearing","congressional",data,Elasticsearch(ES_HOST))
+                data={'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate}
+                es_insert("congressional","hearings",data,Elasticsearch(ES_HOST))
