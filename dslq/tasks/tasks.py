@@ -3,7 +3,7 @@ from dockertask import docker_task
 from subprocess import call,STDOUT
 from time import sleep
 import requests
-from elastic_search import es_get, es_search, es_helper_scan,es_insert
+from elastic_search import es_get, es_search, es_helper_scan
 from elasticsearch import Elasticsearch
 import pandas as pd
 import os
@@ -14,8 +14,7 @@ from urllib import urlopen
 from urlparse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 from xmltodict import parse
-from datetime import datetime
-from nltk import sent_tokenize
+from subprocess import call
 
 #Default base directory 
 basedir="/data/web_data/static"
@@ -50,23 +49,35 @@ def pull_congressional_data(hearingsURL="https://www.gpo.gov/fdsys/browse/collec
     mainLinks(hearingsURL)
     return "Success!! :D :P"
 
-
-
 @task()
-def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=True):
+def get_cong_data_python3(start="99",end="115"):
+    """Python 3 script to pull congressional hearings from gpo website.
+       args: 
+       kwargs: start="99" - starting congressional session (string)
+               end="115" - end congressional session default one more then wanted max 114 so default is 115 (string)
+    """
+    task_id = str(get_cong_data_python3.request.id)
+    #create Result Directory
+    resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
+    os.makedirs(resultDir)
+    call(["/anaconda3/gpo/mods.py",start,end,"{0}/log.txt".format(resultDir)])
+    return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
+    
+@task()
+def get_congressional_data(congress=None, mongo_database="congressional",mongo_collection="hearings",update=None):
     """Congressional Hearing Inventory task
         Agrs: 
         kwargs: congress=<None> # This will run all congresses. Valid values is 99-114 to run individual 
                 mongo_database=<'congressional'>, 
                 mongo_collection=<'hearings'>, 
-                update=<True>
+                update=<None> # this will run through all hearings
         If update = False will inventory entire congressional hearins. Must delete records in mongo. Task does not check of record exists.
     """
     # Session will work better to store connection state. Cookies!
     s = requests.Session()
     #load base page and setup session
     s.get("https://www.gpo.gov/fdsys/")
-    url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection%3aCHRG&st=collection%3aCHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
+    url_template="http://www.gpo.gov/fdsys/search/search.action?sr={0}&originalSearch=collection:CHRG&st=collection:CHRG&ps=100&na=__congressnum&se=__{1}true&sb=dno&timeFrame=&dateBrowse=&govAuthBrowse=&collection=&historical=true"
     total_ids=[]
     db = MongoClient("dsl_search_mongo",27017)
     #db.congressional.hearings.save(x)
@@ -112,14 +123,6 @@ def search_stats(index,doctype,query,context_pages=5):
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
 
 
-@task()
-def index_data():
-    testURL="https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json"
-    r = s.get(testURL)
-    rjson = r.json()
-    pagecount = rjson['meta']['pages']
-    for i in range(1,pagecount+1):
-        htmlparser("https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/.json?page={0}".format(i))
 
 def es_retun_all(es,query,index,doctype,context_pages):
     #meta = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
@@ -271,7 +274,7 @@ def get_chrg_ids(s,url_template,page=1,congress=99):
         if link.get('href'):
             links.append(link.get('href'))
     print "Total Links: %d" % (len(links))
-    print links
+    #print links
     valid_ids=[]
     for link in links:
         end_url=link.split('/')[-1]
@@ -292,8 +295,14 @@ def get_ids(s,url_template,congress):
 
 
 def mParser(tag,url):
-    r = s.get(url)
-    data = parse(r.text)
+    try:
+        r = s.get(url)
+        t = r.text
+    except:
+	sleep(15)
+	r = s.get(url)
+	t = r.text
+    data = parse(t)
     data["tag"] = tag
     x = json.loads(json.dumps(data).replace("@",'').replace("#",''))
     db = MongoClient("dsl_search_mongo",27017)
@@ -312,62 +321,4 @@ def modsParser(s,tag,url):
         print "ERROR: %s %s" %  (tag,url) 
 
 
-
-
-def htmlparser(testURL):
-    db = MongoClient("dsl_search_mongo",27017)
-    r = s.get(testURL)
-    rjson = r.json()
-    flag=""
-    for x in rjson['results']:
-        # if x['HELD_DATE'] =="":
-        #     print x['TAG'],x['EXTENSIONS']
-        if type(x['HELD_DATE'])== list:
-            # print x['HELD_DATE'][1]
-            helddate=x['HELD_DATE'][-1]
-        else:
-            helddate=x['HELD_DATE']
-
-        tag = x['TAG']
-        url = x['URL']
-        title = x['TITLE_INFO'][0]['title']
-
-        hd = datetime(int(helddate.split('-')[0]),int(helddate.split('-')[1]),int(helddate.split('-')[2]))
-        # print hd
-        h_date = '{dt:%B} {dt.day}, {dt.year}'.format(dt=hd)
-
-
-        # print "TITLE : ",title," DATE : ",h_date.upper()," URL : ",url,"TAG : ",tag
-        if url=="":
-            # print json.dumps({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
-            x=json.dumps({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
-            db.congressional.inventory.save(x)
-            break
-
-        try:
-            soup = BeautifulSoup(s.get(url).text,'html.parser')
-        except:
-            sleep(60)
-            soup = BeautifulSoup(s.get(url).text,'html.parser')
-
-        startPoint = soup.text.find(h_date.upper())
-        requiredData = soup.text[startPoint::].replace('\n'," ")
-        requiredData = re.sub(' +',' ',requiredData)
-        requiredDataList = sent_tokenize(requiredData)
-        # print "NUMBER OF SENTENCES ---> ",len(requiredDataList),"\n"
-        line_count=len(requiredDataList)
-        if line_count < 10 and flag != tag:
-            flag=tag
-            # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
-            x=json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
-            db.congressional.inventory.save(x)
-        else:
-            if flag != tag:
-                flag = tag
-                # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
-                x = json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
-                db.congressional.inventory.save(x)
-            for x in requiredDataList:
-                data=json.dumps({'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate})
-                es_insert("hearing","congressional",data,Elasticsearch(ES_HOST))
 
