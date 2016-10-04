@@ -20,6 +20,7 @@ from bs4 import BeautifulSoup
 from xmltodict import parse
 from subprocess import call
 
+
 #Default base directory 
 basedir="/data/web_data/static"
 ES_HOST = [{'host':'esearch'}]
@@ -128,12 +129,14 @@ def search_stats(index,doctype,query,context_pages=5):
 
 @task()
 def index_data():
+    mainSession = requests.session()
     testURL="https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json"
-    r = s.get(testURL)
-    rjson = r.json()
+    readmainSession = mainSession.get(testURL)
+    rjson = readmainSession.json()
     pagecount = rjson['meta']['pages']
     for i in range(1,pagecount+1):
         htmlparser("https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/.json?page={0}".format(i))
+    mainSession.close()
 
 def es_retun_all(es,query,index,doctype,context_pages):
     #meta = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
@@ -333,9 +336,10 @@ def modsParser(s,tag,url):
 
 
 def htmlparser(testURL):
+    rs = requests.session()
     db = MongoClient("dsl_search_mongo",27017)
-    r = s.get(testURL)
-    rjson = r.json()
+    rrs = rs.get(testURL)
+    rjson = rrs.json()
     flag=""
     for x in rjson['results']:
         # if x['HELD_DATE'] =="":
@@ -361,11 +365,12 @@ def htmlparser(testURL):
             db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
             break
 
+        rurls=requests.session()
         try:
-            soup = BeautifulSoup(s.get(url).text,'html.parser')
+            soup = BeautifulSoup(rurls.get(url).text,'html.parser')
         except:
             sleep(60)
-            soup = BeautifulSoup(s.get(url).text,'html.parser')
+            soup = BeautifulSoup(rurls.get(url).text,'html.parser')
 
         startPoint = soup.text.find(h_date.upper())
         requiredData = soup.text[startPoint::].replace('\n'," ")
@@ -385,3 +390,5 @@ def htmlparser(testURL):
             for x in requiredDataList:
                 data={'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate}
                 es_insert("congressional","hearings",data,Elasticsearch(ES_HOST))
+        rurls.close()
+        rrs.close()
