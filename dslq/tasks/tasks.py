@@ -129,14 +129,12 @@ def search_stats(index,doctype,query,context_pages=5):
 
 @task()
 def index_data():
-    mainSession = requests.session()
     testURL="https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json"
-    readmainSession = mainSession.get(testURL)
-    rjson = readmainSession.json()
+    r = s.get(testURL)
+    rjson = r.json()
     pagecount = rjson['meta']['pages']
     for i in range(1,pagecount+1):
         htmlparser("https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/.json?page={0}".format(i))
-    mainSession.close()
 
 def es_retun_all(es,query,index,doctype,context_pages):
     #meta = es_search(es, index, doctype, query=query, page=1, nPerPage=1)
