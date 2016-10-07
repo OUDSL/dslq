@@ -391,6 +391,6 @@ def htmlparser(testURL):
                     es_insert("congressional","hearings",data,Elasticsearch(ES_HOST))
 
         except Exception as e:
-            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':e.message,'URL':tag})
+            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':e.message,'URL':url})
         rurls.close()
         rrs.close()
