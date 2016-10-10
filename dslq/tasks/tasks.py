@@ -7,7 +7,7 @@ from time import sleep
 import requests
 from nltk import sent_tokenize
 
-from elastic_search import es_get, es_search, es_helper_scan,es_insert
+from elastic_search import es_get, es_search, es_helper_scan,es_insert,es_delete_by_tag,es_delete_all
 from elasticsearch import Elasticsearch
 import pandas as pd
 import os
@@ -128,13 +128,18 @@ def search_stats(index,doctype,query,context_pages=5):
     return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
 
 @task()
-def index_data(inventory_option=None):
+def index_data(inventory_option=None): # "inventory_option":"YES"
     db = MongoClient("dsl_search_mongo",27017)
     testURL="https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json"
     r = s.get(testURL)
     rjson = r.json()
     pagecount = rjson['meta']['pages']
     url_template="https://dev.libraries.ou.edu/api-dsl/data_store/data/congressional/hearings/.json?page={0}"
+
+    if inventory_option:
+        es_delete_all("congressional",Elasticsearch(ES_HOST))
+        db.congressional.inventory.remove({})
+
     for i in range(1,pagecount+1):
         rd=requests.get(url_template.format(i))
         rdjson=rd.json()
@@ -146,7 +151,6 @@ def index_data(inventory_option=None):
                 elif db.congressional.inventory.find({'TAG':item['TAG']}).count() == 0:
                     htmlparser(item)
             else:
-                db.congressional.inventory.remove({})
                 htmlparser(item)
 
 def es_retun_all(es,query,index,doctype,context_pages):
@@ -347,9 +351,7 @@ def modsParser(s,tag,url):
 
 
 def htmlparser(x):
-    flag=""
-    # if x['HELD_DATE'] =="":
-    #     print x['TAG'],x['EXTENSIONS']
+
     db = MongoClient("dsl_search_mongo",27017)
     try:
         if type(x['HELD_DATE'])== list:
@@ -361,6 +363,8 @@ def htmlparser(x):
         tag = x['TAG']
         url = x['URL']
         title = x['TITLE_INFO'][0]['title']
+
+
 
         hd = datetime(int(helddate.split('-')[0]),int(helddate.split('-')[1]),int(helddate.split('-')[2]))
         # print hd
@@ -381,24 +385,52 @@ def htmlparser(x):
             soup = BeautifulSoup(rurls.get(url).text,'html.parser')
 
         startPoint = soup.text.find(h_date.upper())
-        requiredData = soup.text[startPoint::].replace('\n'," ")
+        requiredData = soup.text[startPoint::].replace('\n'," ").replace("&amp;","&").replace("&quot;",'"')\
+                                              .replace("&apos;","'").replace("&gt;",">").replace("&lt;","<")
         requiredData = re.sub(' +',' ',requiredData)
+        requiredData = re.sub('-+',' - ',requiredData)
+        requiredData = requiredData.replace("[GRAPHIC] [TIFF OMITTED]","-------------").replace(" ","")
+        requiredData=re.sub('-+','[GRAPHIC] [TIFF OMITTED]',requiredData)
         requiredDataList = sent_tokenize(requiredData)
         # print "NUMBER OF SENTENCES ---> ",len(requiredDataList),"\n"
         line_count=len(requiredDataList)
-        if line_count < 10 and flag != tag:
-            flag=tag
+
+        if line_count < 10:
             # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
-            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
+            metadata=db.congressional.inventory.find_one({'TAG':tag})
+            if metadata:
+                metadata['LINE_COUNT'] = line_count
+                metadata['TYPE']="PDF"
+                metadata['STATUS']="FAIL"
+                db.congressional.inventory.save(metadata)
+            else:
+                db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
+
         else:
-            if flag != tag:
-                flag = tag
-                # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
-                db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
+            es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
             for x in requiredDataList:
                 data={'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate}
                 es_insert("congressional","hearings",data,Elasticsearch(ES_HOST))
+                # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
+
+            metadata=db.congressional.inventory.find_one({'TAG':tag})
+            if metadata:
+                metadata['LINE_COUNT'] = line_count
+                metadata['TYPE']="TEXT"
+                metadata['STATUS']="SUCCESS"
+                db.congressional.inventory.save(metadata)
+            else:
+                db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
 
     except Exception as e:
-        db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':e.message,'URL':url})
+        metadata=db.congressional.inventory.find_one({'TAG':tag})
+        if metadata:
+            metadata['LINE_COUNT'] = line_count
+            metadata['TYPE']="PDF"
+            metadata['STATUS']="FAIL"
+            metadata['ERROR']=e
+            metadata['URL']=url
+            db.congressional.inventory.save(metadata)
+        else:
+            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':e,'URL':url})
     rurls.close()
