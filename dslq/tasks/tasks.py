@@ -350,6 +350,7 @@ def htmlparser(x):
     flag=""
     # if x['HELD_DATE'] =="":
     #     print x['TAG'],x['EXTENSIONS']
+    db = MongoClient("dsl_search_mongo",27017)
     try:
         if type(x['HELD_DATE'])== list:
             # print x['HELD_DATE'][1]
