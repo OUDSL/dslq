@@ -138,7 +138,7 @@ def index_data(inventory_option=None):
     for i in range(1,pagecount+1):
         rd=requests.get(url_template.format(i))
         rdjson=rd.json()
-        for item in rdjson.results:
+        for item in rdjson['results']:
             if not inventory_option:
                 if db.congressional.inventory.find({'TAG':item['TAG'],'STATUS':"FAIL"}).count()>0:
                     htmlparser(item)
