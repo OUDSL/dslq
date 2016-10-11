@@ -77,10 +77,10 @@ def es_index_exist(esindex,es_client):
 
 def es_delete_by_tag(esindex,estype,tag,es_client):
     es = es_client
-    data=es_helper_scan(es,esindex,estype,{'TAG': tag},0)
+    data=es_helper_scan(es,esindex,estype,{'query':{'match_phrase':{'TAG':{'query':tag,'type':'phrase'}}}},0)
     for item in data:
         es.delete(index=esindex,doc_type=estype,id=item['id'])
-        
+
 def es_delete_all(esindex,es_client):
     es = es_client
     es.indices.delete(index=esindex, ignore=[400, 404])
