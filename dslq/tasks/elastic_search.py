@@ -71,6 +71,10 @@ def find_offset(count,page,nPerPage):
     offset = (page - 1) * nPerPage
     return page,offset
 
+def es_index_exist(esindex,es_client):
+    es = es_client
+    return es.indices.exists(index=esindex)
+
 def es_delete_by_tag(esindex,estype,tag,es_client):
     es = es_client
     es.delete_by_query(index=esindex,doc_type=estype, q={'TAG': tag})

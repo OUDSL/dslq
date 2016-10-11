@@ -7,7 +7,7 @@ from time import sleep
 import requests
 from nltk import sent_tokenize
 
-from elastic_search import es_get, es_search, es_helper_scan,es_insert,es_delete_by_tag,es_delete_all
+from elastic_search import es_get, es_search, es_helper_scan,es_insert,es_delete_by_tag,es_delete_all,es_index_exist
 from elasticsearch import Elasticsearch
 import pandas as pd
 import os
@@ -407,7 +407,9 @@ def htmlparser(x):
                 db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
 
         else:
-            es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
+            if es_index_exist("congressional",Elasticsearch(ES_HOST)):
+                es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
+
             for x in requiredDataList:
                 data={'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate}
                 es_insert("congressional","hearings",data,Elasticsearch(ES_HOST))
