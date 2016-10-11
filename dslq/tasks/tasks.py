@@ -410,7 +410,7 @@ def htmlparser(x):
             if es_index_exist("congressional",Elasticsearch(ES_HOST)):
                 es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
 
-            print "POTHINENI"+requiredDataList,line_count
+            print "POTHINENI",requiredDataList,line_count
 
             for x in requiredDataList:
                 data={'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate}
