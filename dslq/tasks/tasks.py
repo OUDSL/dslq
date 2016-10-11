@@ -389,7 +389,7 @@ def htmlparser(x):
                                               .replace("&apos;","'").replace("&gt;",">").replace("&lt;","<")
         requiredData = re.sub(' +',' ',requiredData)
         requiredData = re.sub('-+',' - ',requiredData)
-        requiredData = requiredData.replace("[GRAPHIC] [TIFF OMITTED]","-------------").replace(" ","")
+        requiredData = requiredData.replace("[GRAPHIC]","-------------").replace(" [TIFF OMITTED] ","-------------")
         requiredData=re.sub('-+','[GRAPHIC] [TIFF OMITTED]',requiredData)
         requiredDataList = sent_tokenize(requiredData)
         # print "NUMBER OF SENTENCES ---> ",len(requiredDataList),"\n"
