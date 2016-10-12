@@ -353,6 +353,7 @@ def modsParser(s,tag,url):
 def htmlparser(x):
 
     db = MongoClient("dsl_search_mongo",27017)
+    line_count=0
     try:
         if type(x['HELD_DATE'])== list:
             # print x['HELD_DATE'][1]
