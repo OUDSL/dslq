@@ -364,6 +364,8 @@ def htmlparser(x):
         tag = x['TAG']
         url = x['URL']
         title = x['TITLE_INFO'][0]['title']
+        title = title.replace("&amp;","&").replace("&quot;",'"')\
+                                              .replace("&apos;","'").replace("&gt;",">").replace("&lt;","<")
 
 
 
