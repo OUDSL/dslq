@@ -435,5 +435,5 @@ def htmlparser(x):
             metadata['URL']=url
             db.congressional.inventory.save(metadata)
         else:
-            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':e,'URL':url})
+            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':str(e),'URL':url})
     rurls.close()
