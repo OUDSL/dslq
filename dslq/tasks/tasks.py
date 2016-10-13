@@ -354,6 +354,7 @@ def htmlparser(x):
 
     db = MongoClient("dsl_search_mongo",27017)
     line_count=0
+    rurls=requests.session()
     try:
         if type(x['HELD_DATE'])== list:
             # print x['HELD_DATE'][1]
@@ -380,7 +381,7 @@ def htmlparser(x):
             db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': 'N/A','TYPE': 'PDF','STATUS':'FAIL'})
             return
 
-        rurls=requests.session()
+
         try:
             soup = BeautifulSoup(rurls.get(url).text,'html.parser')
         except:
