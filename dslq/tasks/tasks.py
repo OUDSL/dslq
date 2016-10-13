@@ -417,6 +417,7 @@ def htmlparser(x):
 
             for x in requiredDataList:
                 data={'TAG': tag,'DATA': x, 'TITLE': title,'HELD_DATE':helddate}
+                print "Inserting  ---->  ",data
                 es_insert("congressional","hearings",data,Elasticsearch(ES_HOST))
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
 
