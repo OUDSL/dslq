@@ -92,7 +92,7 @@ def es_insert(esindex,estype,data,es_client):
         id_start=temp['hits']['total'] + 1
     except:
         id_start=1
-    inserted =0
+    data['SENTENCE_ID']=id_start
     es.index(index=esindex, doc_type=estype, id=id_start, body=data)
     # id_start +=1
     # inserted +=1
