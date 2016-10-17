@@ -351,7 +351,6 @@ def modsParser(s,tag,url):
 
 
 def htmlparser(x):
-
     db = MongoClient("dsl_search_mongo",27017)
     line_count=0
     rurls=requests.session()
@@ -413,12 +412,12 @@ def htmlparser(x):
         else:
             # if es_index_exist("congressional",Elasticsearch(ES_HOST)):
             #     es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
-
-
+            es=Elasticsearch(ES_HOST)
+            print requiredDataList
             for each_sentence in requiredDataList:
                 data={'TAG': tag,'DATA': each_sentence, 'TITLE': title,'HELD_DATE':helddate}
-                print "Inserting  ---->  ",data
-                es_insert("congressional","hearings",data,Elasticsearch(ES_HOST),line_count)
+                print "Inserting  ---->  ",each_sentence
+                es_insert("congressional","hearings",data,es,line_count)
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
 
             metadata=db.congressional.inventory.find_one({'TAG':tag})

@@ -97,7 +97,7 @@ def es_insert(esindex,estype,data,es_client,lc):
     data['LINE_COUNT'] = lc
     db = MongoClient("dsl_search_mongo",27017)
     db.congressional.check.save(data)
-    es.create(index=esindex, doc_type=estype, id=id_start, body=data)
+    es.index(index=esindex, doc_type=estype, id=id_start, body=data)
     # id_start +=1
     # inserted +=1
     # return id_start - 1, inserted
