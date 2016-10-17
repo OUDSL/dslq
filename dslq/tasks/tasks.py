@@ -354,6 +354,8 @@ def htmlparser(x):
     db = MongoClient("dsl_search_mongo",27017)
     line_count=0
     rurls=requests.session()
+    url=""
+    tag=""
     try:
         if type(x['HELD_DATE'])== list:
             # print x['HELD_DATE'][1]
@@ -417,7 +419,7 @@ def htmlparser(x):
             for each_sentence in requiredDataList:
                 data={'TAG': tag,'DATA': each_sentence, 'TITLE': title,'HELD_DATE':helddate}
                 print "Inserting  ---->  ",each_sentence
-                es_insert("congressional","hearings",data,es,line_count)
+                es_insert("congressional","hearings",data,es)
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
 
             metadata=db.congressional.inventory.find_one({'TAG':tag})
