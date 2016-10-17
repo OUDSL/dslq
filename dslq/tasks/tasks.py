@@ -442,11 +442,11 @@ def htmlparser(x):
         metadata=db.congressional.inventory.find_one({'TAG':tag})
         if metadata:
             metadata['LINE_COUNT'] = line_count
-            metadata['TYPE']="PDF"
+            metadata['TYPE']="ERROR"
             metadata['STATUS']="FAIL"
             metadata['ERROR']=e
             metadata['URL']=url
             db.congressional.inventory.save(metadata)
         else:
-            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL','ERROR':str(e),'URL':url})
+            db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'ERROR','STATUS':'FAIL','ERROR':str(e),'URL':url})
     rurls.close()
