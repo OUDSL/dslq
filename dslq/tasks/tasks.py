@@ -412,14 +412,22 @@ def htmlparser(x):
                 db.congressional.inventory.save({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'PDF','STATUS':'FAIL'})
 
         else:
-            # if es_index_exist("congressional",Elasticsearch(ES_HOST)):
-            #     es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
             es=Elasticsearch(ES_HOST)
+            try:
+                temp=es.search(index=esindex, doc_type=estype, size=0)
+                id=temp['hits']['total'] + 1
+            except:
+                id=1
+
+            if es_index_exist("congressional",Elasticsearch(ES_HOST)):
+                es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
+
             print requiredDataList
             for each_sentence in requiredDataList:
                 data={'TAG': tag,'DATA': each_sentence, 'TITLE': title,'HELD_DATE':helddate}
                 print "Inserting  ---->  ",each_sentence
-                es_insert("congressional","hearings",data,es)
+                es_insert("congressional","hearings",data,es,id)
+                id+=1
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
 
             metadata=db.congressional.inventory.find_one({'TAG':tag})

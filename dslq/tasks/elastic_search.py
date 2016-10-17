@@ -85,15 +85,12 @@ def es_delete_all(esindex,es_client):
     es = es_client
     es.indices.delete(index=esindex, ignore=[400, 404])
 
-def es_insert(esindex,estype,data,es_client):
+def es_insert(esindex,estype,data,es_client,id):
     es = es_client
-    try:
-        temp=es.search(index=esindex, doc_type=estype, size=0)
-        id_start=temp['hits']['total'] + 1
-    except:
-        id_start=1
-    data['SENTENCE_ID']=id_start
-    es.index(index=esindex, doc_type=estype, id=id_start, body=data)
-    # id_start +=1
-    # inserted +=1
-    # return id_start - 1, inserted
+    # try:
+    #     temp=es.search(index=esindex, doc_type=estype, size=0)
+    #     id_start=temp['hits']['total'] + 1
+    # except:
+    #     id_start=1
+    data['SENTENCE_ID']=id
+    es.index(index=esindex, doc_type=estype, id=id, body=data)
