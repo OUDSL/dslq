@@ -2,6 +2,7 @@ __author__ = 'mstacy'
 import ast
 import math
 from elasticsearch import helpers
+from pymongo import MongoClient
 #import collections
 #from rest_framework.templatetags.rest_framework import replace_query_param
 
@@ -85,7 +86,7 @@ def es_delete_all(esindex,es_client):
     es = es_client
     es.indices.delete(index=esindex, ignore=[400, 404])
 
-def es_insert(esindex,estype,data,es_client):
+def es_insert(esindex,estype,data,es_client,lc):
     es = es_client
     try:
         temp=es.search(index=esindex, doc_type=estype, size=0)
@@ -93,6 +94,9 @@ def es_insert(esindex,estype,data,es_client):
     except:
         id_start=1
     data['SENTENCE_ID']=id_start
+    data['LINE_COUNT'] = lc
+    db = MongoClient("dsl_search_mongo",27017)
+    db.congressional.check.save(data)
     es.index(index=esindex, doc_type=estype, id=id_start, body=data)
     # id_start +=1
     # inserted +=1
