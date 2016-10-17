@@ -422,10 +422,8 @@ def htmlparser(x):
             if es_index_exist("congressional",Elasticsearch(ES_HOST)):
                 es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
 
-            print requiredDataList
             for each_sentence in requiredDataList:
                 data={'TAG': tag,'DATA': each_sentence, 'TITLE': title,'HELD_DATE':helddate}
-                print "Inserting  ---->  ",each_sentence
                 es_insert("congressional","hearings",data,es,id)
                 id+=1
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
