@@ -415,7 +415,7 @@ def htmlparser(x):
             es=Elasticsearch(ES_HOST)
             try:
                 temp=es.count(index="congressional", doc_type="hearings")
-                id=temp['hits']['total'] + 1
+                id=temp['count'] + 1
             except:
                 id=1
 
