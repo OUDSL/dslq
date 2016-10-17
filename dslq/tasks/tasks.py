@@ -394,8 +394,9 @@ def htmlparser(x):
                                               .replace("&apos;","'").replace("&gt;",">").replace("&lt;","<")
         requiredData = re.sub(' +',' ',requiredData)
         requiredData = re.sub('-+',' - ',requiredData)
-        requiredData = requiredData.replace("[GRAPHIC]","-------------").replace(" [TIFF OMITTED] ","-------------")
-        requiredData=re.sub('-+','[GRAPHIC] [TIFF OMITTED]',requiredData)
+        requiredData = requiredData.replace("[GRAPHIC]","-").replace("[TIFF OMITTED]","-")
+        requiredData = re.sub('-+',' - ',requiredData)
+        # requiredData=re.sub('-+','[GRAPHIC][TIFF OMITTED]',requiredData)
         requiredDataList = sent_tokenize(requiredData)
         # print "NUMBER OF SENTENCES ---> ",len(requiredDataList),"\n"
         line_count=len(requiredDataList)
@@ -423,7 +424,7 @@ def htmlparser(x):
                 es_delete_by_tag("congressional","hearings",tag,Elasticsearch(ES_HOST))
 
             for each_sentence in requiredDataList:
-                data={'TAG': tag,'DATA': each_sentence, 'TITLE': title,'HELD_DATE':helddate}
+                data={'TAG': tag,'DATA': each_sentence, 'TITLE': title,'DATE':helddate}
                 es_insert("congressional","hearings",data,es,id)
                 id+=1
                 # print json.dumps({'TAG':tag,'LINE_COUNT': line_count,'TYPE': 'TEXT','STATUS':'SUCCESS'})
