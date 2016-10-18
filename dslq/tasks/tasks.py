@@ -444,7 +444,7 @@ def htmlparser(x):
             metadata['LINE_COUNT'] = line_count
             metadata['TYPE']="ERROR"
             metadata['STATUS']="FAIL"
-            metadata['ERROR']=e
+            metadata['ERROR']=str(e)
             metadata['URL']=url
             db.congressional.inventory.save(metadata)
         else:
