@@ -94,3 +94,14 @@ def es_insert(esindex,estype,data,es_client,id):
     #     id_start=1
     data['SENTENCE_ID']=id
     es.index(index=esindex, doc_type=estype, id=id, body=data)
+
+
+def es_add_chamber(esindex,estype,es_client):
+    data = helpers.scan(es_client,index=esindex,doc_type=estype,query={'query': {'match_all': {}}},preserve_order=True)
+    for doc in data:
+        if "hhrg" in doc['_source']['TAG']:
+            es.update(index=esindex,doc_type=estype,id=doc['_id'],body={"doc":{"CHAMBER":"HOUSE"}})
+        elif "shrg" in doc['_source']['TAG']:
+            es.update(index=esindex,doc_type=estype,id=doc['_id'],body={"doc":{"CHAMBER":"SENATE"}})
+        elif "jhrg" in doc['_source']['TAG']:
+            es.update(index=esindex,doc_type=estype,id=doc['_id'],body={"doc":{"CHAMBER":"JOINT"}})
