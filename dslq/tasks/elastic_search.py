@@ -97,6 +97,7 @@ def es_insert(esindex,estype,data,es_client,id):
 
 
 def es_add_chamber(esindex,estype,es_client):
+    es = es_client
     data = helpers.scan(es_client,index=esindex,doc_type=estype,query={'query': {'match_all': {}}},preserve_order=True)
     for doc in data:
         if "hhrg" in doc['_source']['TAG']:
