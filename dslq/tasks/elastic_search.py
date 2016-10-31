@@ -108,7 +108,7 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
             index = itm.get('_index',None)
             types= itm.get('_type',None)
 
-            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':itm['_source']['TAG'][5:8],'CHAMBER':itm['_source']['CHAMBER'],
+            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':itm['_source']['TITLE'],'CONGRESS':itm['_source']['TAG'][5:8],'CHAMBER':itm['_source']['CHAMBER'],
                             'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})
         else:
             result.append(itm)
