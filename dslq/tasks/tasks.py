@@ -129,9 +129,9 @@ def search_stats(index,doctype,query,context_pages=5):
 
 @task()
 def search_main_stats(index,doctype,query,context_pages=5):
-    task_id = str(search_stats.request.id)
+    task_id = str(search_main_stats.request.id)
     #create Result Directory
-    resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
+    resultDir = os.path.join(basedir, 'dsl_main_tasks/', task_id)
     os.makedirs(resultDir)
     #Get ES dataset
     result = es_helper_main_scan(Elasticsearch(ES_HOST),index,doctype,query,context_pages)
@@ -140,7 +140,7 @@ def search_main_stats(index,doctype,query,context_pages=5):
     df.to_csv("{0}/es_query_data.csv".format(resultDir),encoding='utf-8')
     #save dataframe pickle to file
     df.to_pickle("{0}/es_query_data.pkl".format(resultDir))
-    return "http://dev.libraries.ou.edu/dsl_tasks/{0}".format(task_id)
+    return "http://dev.libraries.ou.edu/dsl_main_tasks/{0}".format(task_id)
 
 @task()
 def index_data(inventory_option=None): # "inventory_option":"YES"
