@@ -2,6 +2,7 @@ __author__ = 'mstacy'
 import ast
 import math
 from elasticsearch import helpers
+from pymongo import MongoClient
 #import collections
 #from rest_framework.templatetags.rest_framework import replace_query_param
 
@@ -56,6 +57,63 @@ def es_helper_scan(es_client,index,doc_type,query,context_pages):
         else:
             result.append(itm)
     return result
+
+def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
+    es = es_client
+    db = MongoClient("dsl_search_mongo",27017)
+    #setup es query params
+    query = ast.literal_eval(str(query))
+    data = helpers.scan(es,index=index,doc_type=doc_type,query=query,preserve_order=True)
+    result=[]
+    for itm in data:
+        if context_pages >0:
+            ids = list(range(int(itm['_id'])-context_pages,int(itm['_id'])+context_pages+1))
+            str_ids = [str(x) for x in ids]
+            temp=''
+            tag=[]
+            for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
+                if item['found']==True:
+                    if item['_source']['TAG']== itm['_source']['TAG']:
+                        temp=temp + item['_source']['DATA']
+
+            r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+            committee=""
+            try:
+                for x in r:
+                    for y in x['CONG_COMMITTEE']:
+                        for z in y['name']:
+                            if z['type'] == "authority-standard":
+                                committee = z['text']
+            except:
+                committee = "NOT AVAILABLE"
+
+            member=[]
+            try:
+                for x in r:
+                    for y in x['CONG_MEMBERS']:
+                        if y['name']['type'] == "parsed":
+                            members.append(y['name']['text'])
+            except:
+                member.append("NOT AVAILABLE")
+
+            session = ""
+            try:
+                for x in r:
+                    for y in x['EXTENSIONS'][1]['session']:
+                        session=y
+            except:
+                session="NOT AVAILABLE"
+            held_date= itm['_source']['DATE']
+            score =itm.get('_score',None)
+            index = itm.get('_index',None)
+            types= itm.get('_type',None)
+
+            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':itm['_source']['TAG'][5:8],'CHAMBER':itm['_source']['CHAMBER'],
+                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})
+        else:
+            result.append(itm)
+    return result
+
 
 def find_offset(count,page,nPerPage):
     max_page = math.ceil(float(count) / nPerPage)
