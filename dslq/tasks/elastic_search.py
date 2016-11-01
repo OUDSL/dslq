@@ -88,36 +88,24 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
                 committee = "NOT AVAILABLE"
 
             member=[]
-            f = True
+            r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
             try:
                 for x in r:
                     for y in x['CONG_MEMBERS']:
                         for z in y['name']:
-                            if type(z) == "unicode":
-                                f = True
-                                break
-                            else:
-                                f = False
-                                break
-                if f:
-                    for x in r:
-                        for y in x['CONG_MEMBERS']:
-                            if y['name']['type'] == "parsed":
-                                member.append(y['name']['text'])
-                else:
-                    for x in r:
-                        for y in x['CONG_MEMBERS']:
-                            for z in y['name']:
+                            if type(z) is dict:
                                 if z['type'] == "parsed":
                                     member.append(z['text'])
             except:
                 member.append("NOT AVAILABLE")
 
             session = ""
+            r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
             try:
                 for x in r:
-                    for y in x['EXTENSIONS'][1]['session']:
-                        session=y
+                    for y in x['EXTENSIONS']:
+                        if "session" in y:
+                            print y['session']
             except:
                 session="NOT AVAILABLE"
             held_date= itm['_source']['DATE']
