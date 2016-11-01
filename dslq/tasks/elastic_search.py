@@ -96,6 +96,9 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
                             if type(z) is dict:
                                 if z['type'] == "parsed":
                                     member.append(z['text'])
+                            else:
+                                if y['name']['type'] == "parsed":
+                                    member.append(y['name']['text'])
             except:
                 member.append("NOT AVAILABLE")
 
@@ -105,7 +108,7 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
                 for x in r:
                     for y in x['EXTENSIONS']:
                         if "session" in y:
-                            print y['session']
+                            session = y['session']
             except:
                 session="NOT AVAILABLE"
             held_date= itm['_source']['DATE']
