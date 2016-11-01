@@ -88,11 +88,28 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
                 committee = "NOT AVAILABLE"
 
             member=[]
+            f = True
             try:
                 for x in r:
                     for y in x['CONG_MEMBERS']:
-                        if y['name']['type'] == "parsed":
-                            members.append(y['name']['text'])
+                        for z in y['name']:
+                            if type(z) == "unicode":
+                                f = True
+                                break
+                            else:
+                                f = False
+                                break
+                if f:
+                    for x in r:
+                        for y in x['CONG_MEMBERS']:
+                            if y['name']['type'] == "parsed":
+                                member.append(y['name']['text'])
+                else:
+                    for x in r:
+                        for y in x['CONG_MEMBERS']:
+                            for z in y['name']:
+                                if z['type'] == "parsed":
+                                    member.append(z['text'])
             except:
                 member.append("NOT AVAILABLE")
 
