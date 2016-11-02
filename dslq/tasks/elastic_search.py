@@ -102,6 +102,9 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
             except:
                 member.append("NOT AVAILABLE")
 
+            if len(member) == 0:
+                member.append("NOT AVAILABLE")
+
             session = ""
             r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
             try:
