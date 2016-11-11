@@ -161,6 +161,14 @@ def es_insert(esindex,estype,data,es_client,id):
     #     id_start=temp['hits']['total'] + 1
     # except:
     #     id_start=1
+
+    if "hhrg" in data['TAG']:
+        data['CHAMBER'] = "HOUSE"
+    elif "shrg" in data['TAG']:
+        data['CHAMBER'] = "SENATE"
+    elif "jhrg" in data['TAG']:
+        data['CHAMBER'] = "JOINT"
+
     data['SENTENCE_ID']=id
     es.index(index=esindex, doc_type=estype, id=id, body=data)
 
