@@ -29,33 +29,33 @@ def es_helper_scan(es_client,index,doc_type,query,context_pages):
     for itm in data:
         if context_pages >0:
             ids = list(range(int(itm['_id'])-context_pages,int(itm['_id'])+context_pages+1))
-            str_ids = [str(x) for x in ids]
-            temp=''
-            for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
-                if item['found']==True:
-                    if item['_source']['TAG']== itm['_source']['TAG']:
-                        temp=temp + item['_source']['DATA']
-            mquery = {'query':{'match':{'TAG':{'query':itm['_source']['TAG'],'operator':'and'}}}}
-            mdata=es_search(es,index,'metadata',query=mquery)
-            metadata = ''
-            if mdata['hits']['total']>0:
-                metadata = mdata['hits']['hits'][0]['_source']
-                title=metadata.get('title',None)
-                congress=metadata.get('congress',None)
-                chamber=metadata.get('chamber',None)
-                committee = metadata.get('committee',None)
-                member=[]
-                for name in metadata.get('members',[]):
-                    member.append(name.get('name',None))
-                held_date= metadata.get('held_date',None)
-                session=metadata.get('session',None)
-                score =itm.get('_score',None)
-                index = itm.get('_index',None)
-                types= itm.get('_type',None)
-            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':congress,'CHAMBER':chamber,
-                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})        
         else:
-            result.append(itm)
+            ids= [int(itm['_id'])]
+        str_ids = [str(x) for x in ids]
+        temp=''
+        for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
+            if item['found']==True:
+                if item['_source']['TAG']== itm['_source']['TAG']:
+                    temp=temp + item['_source']['DATA']
+        mquery = {'query':{'match':{'TAG':{'query':itm['_source']['TAG'],'operator':'and'}}}}
+        mdata=es_search(es,index,'metadata',query=mquery)
+        metadata = ''
+        if mdata['hits']['total']>0:
+            metadata = mdata['hits']['hits'][0]['_source']
+            title=metadata.get('title',None)
+            congress=metadata.get('congress',None)
+            chamber=metadata.get('chamber',None)
+            committee = metadata.get('committee',None)
+            member=[]
+            for name in metadata.get('members',[]):
+                member.append(name.get('name',None))
+            held_date= metadata.get('held_date',None)
+            session=metadata.get('session',None)
+            score =itm.get('_score',None)
+            index = itm.get('_index',None)
+            types= itm.get('_type',None)
+        result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':congress,'CHAMBER':chamber,
+                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})        
     return result
 
 def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
@@ -68,61 +68,62 @@ def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
     for itm in data:
         if context_pages >0:
             ids = list(range(int(itm['_id'])-context_pages,int(itm['_id'])+context_pages+1))
-            str_ids = [str(x) for x in ids]
-            temp=''
-            tag=[]
-            for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
-                if item['found']==True:
-                    if item['_source']['TAG']== itm['_source']['TAG']:
-                        temp=temp + item['_source']['DATA']
-
-            r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
-            committee=""
-            try:
-                for x in r:
-                    for y in x['CONG_COMMITTEE']:
-                        for z in y['name']:
-                            if z['type'] == "authority-standard":
-                                committee = z['text']
-            except:
-                committee = "NOT AVAILABLE"
-
-            member=[]
-            r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
-            try:
-                for x in r:
-                    for y in x['CONG_MEMBERS']:
-                        for z in y['name']:
-                            if type(z) is dict:
-                                if z['type'] == "parsed":
-                                    member.append(z['text'])
-                            else:
-                                if y['name']['type'] == "parsed":
-                                    member.append(y['name']['text'])
-            except:
-                member.append("NOT AVAILABLE")
-
-            if len(member) == 0:
-                member.append("NOT AVAILABLE")
-
-            session = ""
-            r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
-            try:
-                for x in r:
-                    for y in x['EXTENSIONS']:
-                        if "session" in y:
-                            session = y['session']
-            except:
-                session="NOT AVAILABLE"
-            held_date= itm['_source']['DATE']
-            score =itm.get('_score',None)
-            index = itm.get('_index',None)
-            types= itm.get('_type',None)
-
-            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':itm['_source']['TITLE'],'CONGRESS':itm['_source']['TAG'][5:8],'CHAMBER':itm['_source']['CHAMBER'],
-                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})
         else:
-            result.append(itm)
+            ids = [int(itm['_id'])]
+
+        str_ids = [str(x) for x in ids]
+        temp=''
+        tag=[]
+        for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
+            if item['found']==True:
+                if item['_source']['TAG']== itm['_source']['TAG']:
+                    temp=temp + item['_source']['DATA']
+
+        r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+        committee=""
+        try:
+            for x in r:
+                for y in x['CONG_COMMITTEE']:
+                    for z in y['name']:
+                        if z['type'] == "authority-standard":
+                            committee = z['text']
+        except:
+            committee = "NOT AVAILABLE"
+
+        member=[]
+        r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+        try:
+            for x in r:
+                for y in x['CONG_MEMBERS']:
+                    for z in y['name']:
+                        if type(z) is dict:
+                            if z['type'] == "parsed":
+                                member.append(z['text'])
+                        else:
+                            if y['name']['type'] == "parsed":
+                                member.append(y['name']['text'])
+        except:
+            member.append("NOT AVAILABLE")
+
+        if len(member) == 0:
+            member.append("NOT AVAILABLE")
+
+        session = ""
+        r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+        try:
+            for x in r:
+                for y in x['EXTENSIONS']:
+                    if "session" in y:
+                        session = y['session']
+        except:
+            session="NOT AVAILABLE"
+        held_date= itm['_source']['DATE']
+        score =itm.get('_score',None)
+        index = itm.get('_index',None)
+        types= itm.get('_type',None)
+
+        result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':itm['_source']['TITLE'],'CONGRESS':itm['_source']['TAG'][5:8],'CHAMBER':itm['_source']['CHAMBER'],
+                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})
     return result
 
 
