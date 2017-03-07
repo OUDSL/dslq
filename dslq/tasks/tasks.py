@@ -60,17 +60,23 @@ def add(x, y):
     return result
     
 @task()
-def get_cong_data_python3(start="99",end="116"):
+def get_cong_data_python3(congress=None):
     """Python 3 script to pull congressional hearings from gpo website.
        args: 
-       kwargs: start="99" - starting congressional session (string)
-               end="116" - end congressional session default one more then wanted max 115 so default is 116 (string)
+       kwargs: 
+            congress -  comma separated string of congress numbers ("99,100,101,102,103,....115")
+                        Default will run all 99 through 115
     """
     task_id = str(get_cong_data_python3.request.id)
     #create Result Directory
     resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
     os.makedirs(resultDir)
-    call(["/anaconda3/gpo/mods.py",start,end,"{0}/log.txt".format(resultDir),_get_config_parameter('api','token')])
+    if congress:
+        cong =congress.split(',')
+    else: 
+        cong = ['99','100','101','102','103','104','105','106','107','108','109','110','111','112','113','114','115']
+    for c in cong:
+        call(["/anaconda3/gpo/mods.py",c,str(int(c)+1),"{0}/log.txt".format(resultDir),_get_config_parameter('api','token')])
     return "{0}/dsl_tasks/{1}".format(_get_config_parameter('api','base_url'),task_id)
     
 @task()
