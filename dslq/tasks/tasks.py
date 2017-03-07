@@ -136,21 +136,26 @@ def index_data(): # "inventory_option":"YES"
     rjson = r.json()
     pagecount = rjson['meta']['pages']
     url_template="{0}/api-dsl/data_store/data/congressional/hearings/.json?page={1}"
-
+    hearings_count=0
+    hearings_new =0
+    hearings_retry=0
     for i in range(1,pagecount+1):
         rd=requests.get(url_template.format(api_host,i))
         rdjson=rd.json()
         for item in rdjson['results']:
             #metadata = htmlparser(item)
+            hearings_count+=1
             data=_api_get(item["TAG"])
             if data['count']>0:
                 if data['results'][0]['STATUS'] != 'SUCCESS':
+                    hearings_retry+=1
                     metadata = htmlparser(item)
                     metadata['_id']=data['results'][0]['_id']
                     _api_save(metadata)
             else:
+                hearings_new+=1
                 _api_save(htmlparser(item))
-    
+    return "{0} Congressional Hearings Checked. New: {1}, Retry: {2}".format(hearings_count,hearings_new,hearings_retry)
             
 @task()
 def add_chamber():
