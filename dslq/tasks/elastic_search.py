@@ -2,6 +2,7 @@ __author__ = 'mstacy'
 import ast
 import math
 from elasticsearch import helpers
+from pymongo import MongoClient
 #import collections
 #from rest_framework.templatetags.rest_framework import replace_query_param
 
@@ -28,34 +29,103 @@ def es_helper_scan(es_client,index,doc_type,query,context_pages):
     for itm in data:
         if context_pages >0:
             ids = list(range(int(itm['_id'])-context_pages,int(itm['_id'])+context_pages+1))
-            str_ids = [str(x) for x in ids]
-            temp=''
-            for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
-                if item['found']==True:
-                    if item['_source']['TAG']== itm['_source']['TAG']:
-                        temp=temp + item['_source']['DATA']
-            mquery = {'query':{'match':{'TAG':{'query':itm['_source']['TAG'],'operator':'and'}}}}
-            mdata=es_search(es,index,'metadata',query=mquery)
-            metadata = ''
-            if mdata['hits']['total']>0:
-                metadata = mdata['hits']['hits'][0]['_source']
-                title=metadata.get('title',None)
-                congress=metadata.get('congress',None)
-                chamber=metadata.get('chamber',None)
-                committee = metadata.get('committee',None)
-                member=[]
-                for name in metadata.get('members',[]):
-                    member.append(name.get('name',None))
-                held_date= metadata.get('held_date',None)
-                session=metadata.get('session',None)
-                score =itm.get('_score',None)
-                index = itm.get('_index',None)
-                types= itm.get('_type',None)
-            result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':congress,'CHAMBER':chamber,
-                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})        
         else:
-            result.append(itm)
+            ids= [int(itm['_id'])]
+        str_ids = [str(x) for x in ids]
+        temp=''
+        for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
+            if item['found']==True:
+                if item['_source']['TAG']== itm['_source']['TAG']:
+                    temp=temp + item['_source']['DATA']
+        mquery = {'query':{'match':{'TAG':{'query':itm['_source']['TAG'],'operator':'and'}}}}
+        mdata=es_search(es,index,'metadata',query=mquery)
+        metadata = ''
+        if mdata['hits']['total']>0:
+            metadata = mdata['hits']['hits'][0]['_source']
+            title=metadata.get('title',None)
+            congress=metadata.get('congress',None)
+            chamber=metadata.get('chamber',None)
+            committee = metadata.get('committee',None)
+            member=[]
+            for name in metadata.get('members',[]):
+                member.append(name.get('name',None))
+            held_date= metadata.get('held_date',None)
+            session=metadata.get('session',None)
+            score =itm.get('_score',None)
+            index = itm.get('_index',None)
+            types= itm.get('_type',None)
+        result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':title,'CONGRESS':congress,'CHAMBER':chamber,
+                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})        
     return result
+
+def es_helper_main_scan(es_client,index,doc_type,query,context_pages):
+    es = es_client
+    db = MongoClient("dsl_search_mongo",27017)
+    #setup es query params
+    query = ast.literal_eval(str(query))
+    data = helpers.scan(es,index=index,doc_type=doc_type,query=query,preserve_order=True)
+    result=[]
+    for itm in data:
+        if context_pages >0:
+            ids = list(range(int(itm['_id'])-context_pages,int(itm['_id'])+context_pages+1))
+        else:
+            ids = [int(itm['_id'])]
+
+        str_ids = [str(x) for x in ids]
+        temp=''
+        tag=[]
+        for item in es_get(es, index, doc_type, ids=str_ids)['docs']:
+            if item['found']==True:
+                if item['_source']['TAG']== itm['_source']['TAG']:
+                    temp=temp + item['_source']['DATA']
+
+        r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+        committee=""
+        try:
+            for x in r:
+                for y in x['CONG_COMMITTEE']:
+                    for z in y['name']:
+                        if z['type'] == "authority-standard":
+                            committee = z['text']
+        except:
+            committee = "NOT AVAILABLE"
+
+        member=[]
+        r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+        try:
+            for x in r:
+                for y in x['CONG_MEMBERS']:
+                    for z in y['name']:
+                        if type(z) is dict:
+                            if z['type'] == "parsed":
+                                member.append(z['text'])
+                        else:
+                            if y['name']['type'] == "parsed":
+                                member.append(y['name']['text'])
+        except:
+            member.append("NOT AVAILABLE")
+
+        if len(member) == 0:
+            member.append("NOT AVAILABLE")
+
+        session = ""
+        r = db.congressional.hearings.find({"TAG":itm['_source']['TAG']})
+        try:
+            for x in r:
+                for y in x['EXTENSIONS']:
+                    if "session" in y:
+                        session = y['session']
+        except:
+            session="NOT AVAILABLE"
+        held_date= itm['_source']['DATE']
+        score =itm.get('_score',None)
+        index = itm.get('_index',None)
+        types= itm.get('_type',None)
+
+        result.append({'TAG':itm['_source']['TAG'],'DATA':temp,'TITLE':itm['_source']['TITLE'],'CONGRESS':itm['_source']['TAG'][5:8],'CHAMBER':itm['_source']['CHAMBER'],
+                            'COMMITTEE':committee,'MEMBERS':member,'HELD_DATE':held_date, 'SESSION':session})
+    return result
+
 
 def find_offset(count,page,nPerPage):
     max_page = math.ceil(float(count) / nPerPage)
@@ -70,3 +140,47 @@ def find_offset(count,page,nPerPage):
         page = 1
     offset = (page - 1) * nPerPage
     return page,offset
+
+def es_index_exist(esindex,es_client):
+    es = es_client
+    return es.indices.exists(index=esindex)
+
+def es_delete_by_tag(esindex,estype,tag,es_client):
+    es = es_client
+    data=es_helper_scan(es,esindex,estype,{'query':{'match_phrase':{'TAG':{'query':tag,'type':'phrase'}}}},0)
+    for item in data:
+        es.delete(index=esindex,doc_type=estype,id=item['id'])
+
+def es_delete_all(esindex,es_client):
+    es = es_client
+    es.indices.delete(index=esindex, ignore=[400, 404])
+
+def es_insert(esindex,estype,data,es_client,id):
+    es = es_client
+    # try:
+    #     temp=es.search(index=esindex, doc_type=estype, size=0)
+    #     id_start=temp['hits']['total'] + 1
+    # except:
+    #     id_start=1
+
+    if "hhrg" in data['TAG']:
+        data['CHAMBER'] = "HOUSE"
+    elif "shrg" in data['TAG']:
+        data['CHAMBER'] = "SENATE"
+    elif "jhrg" in data['TAG']:
+        data['CHAMBER'] = "JOINT"
+
+    data['SENTENCE_ID']=id
+    es.index(index=esindex, doc_type=estype, id=id, body=data)
+
+
+def es_add_chamber(esindex,estype,es_client):
+    es = es_client
+    data = helpers.scan(es_client,index=esindex,doc_type=estype,query={'query': {'match_all': {}}},preserve_order=True)
+    for doc in data:
+        if "hhrg" in doc['_source']['TAG']:
+            es.update(index=esindex,doc_type=estype,id=doc['_id'],body={"doc":{"CHAMBER":"HOUSE"}})
+        elif "shrg" in doc['_source']['TAG']:
+            es.update(index=esindex,doc_type=estype,id=doc['_id'],body={"doc":{"CHAMBER":"SENATE"}})
+        elif "jhrg" in doc['_source']['TAG']:
+            es.update(index=esindex,doc_type=estype,id=doc['_id'],body={"doc":{"CHAMBER":"JOINT"}})
