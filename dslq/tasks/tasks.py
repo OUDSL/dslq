@@ -7,7 +7,7 @@ from time import sleep
 import requests
 from nltk import sent_tokenize
 
-from elastic_search import es_get, es_search, es_helper_scan,es_insert,es_delete_by_tag,es_delete_all,es_index_exist,es_add_chamber,es_helper_main_scan
+from .elastic_search import es_get, es_search, es_helper_scan,es_insert,es_delete_by_tag,es_delete_all,es_index_exist,es_add_chamber,es_helper_main_scan
 from elasticsearch import Elasticsearch
 import pandas as pd
 import os
