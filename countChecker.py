@@ -33,7 +33,7 @@ def countChecker(url_template):
     print("countChecker file is saved")
     return(result)
 
-
 # calling functions
-url_template = "https://cc.lib.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json&page={0}"
-result = countChecker(url_template)
+if __name__ == '__main__':
+    url_template = "https://cc.lib.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json&page={0}"
+    result = countChecker(url_template)
