@@ -60,6 +60,54 @@ def add(x, y):
     return result
     
 @task()
+def countChecker():
+    url_template = "https://cc.lib.ou.edu/api-dsl/data_store/data/congressional/hearings/?format=json&page={0}"
+
+    task_id = str(countChecker.request.id)
+    #create Result Directory
+    resultDir = os.path.join(basedir, 'dsl_tasks/', task_id)
+    os.makedirs(resultDir)
+
+    ## to-dos: use congress.gov's api to get congress stats
+    website_stat = pd.read_csv('website.csv', sep=',', header=0)
+    cong = [99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115]
+    stat = [1,1,0,1,55,289,870,1685,2158,2367,2890,3646,3261,3094,2708,1990,12]
+    website_stat = pd.DataFrame({'congress': cong, 'website':stat})
+
+    congressArray = []
+
+    # parse the data source and grab the tag to the congressArray
+    for page in range(1,517):
+        req=requests.get(url_template.format(page))
+        data=req.json()
+        for item in data['results']:
+            congress = item['TAG'].split('-')[-1]
+            if congress[0:2] =='99':
+                congress=congress[:2]
+                congressArray.append(int(congress))
+            else:
+                congress=congress[:3]
+                if congress.isdigit() == True:
+                    congressArray.append(int(congress))
+
+    # count frequency by congress number
+    counter = collections.Counter(congressArray)
+    df = pd.DataFrame.from_dict(counter, orient='index').reset_index()
+    df = df.rename(columns={'index': 'congress', 0: 'codeCount'})
+
+    # merge dataframes and write the result
+    result = pd.merge(website_stat, df, on = 'congress', how='inner')
+    result['diff'] = result['website'] - result['codeCount']
+
+    df = pd.DataFrame(result)
+    #Save results to csv
+    df.to_csv("{0}/es_query_data.csv".format(resultDir),encoding='utf-8')
+    #save dataframe feather to file
+    #:feather.write_dataframe(df, "{0}/es_query_data.pkl".format(resultDir))
+
+    return "https://cc.lib.ou.edu/dsl_tasks/{0}/".format(task_id)
+
+@task()
 def get_cong_data_python3(congress=None):
     """Python 3 script to pull congressional hearings from gpo website.
        args: 
