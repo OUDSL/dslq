@@ -70,7 +70,7 @@ def countChecker():
 
     ## to-dos: use congress.gov's api to get congress stats
     website_stat = pd.read_csv('website.csv', sep=',', header=0)
-    cong = [99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115]
+    cong = [99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116]
     stat = [1,1,0,1,55,289,870,1685,2158,2367,2890,3646,3261,3094,2708,1990,12]
     website_stat = pd.DataFrame({'congress': cong, 'website':stat})
 
@@ -112,8 +112,8 @@ def get_cong_data_python3(congress=None):
     """Python 3 script to pull congressional hearings from gpo website.
        args: 
        kwargs: 
-            congress -  comma separated string of congress numbers ("99,100,101,102,103,....115")
-                        Default will run all 99 through 115
+            congress -  comma separated string of congress numbers ("99,100,101,102,103,....116")
+                        Default will run all 99 through 116
     """
     task_id = str(get_cong_data_python3.request.id)
     #create Result Directory
@@ -122,7 +122,7 @@ def get_cong_data_python3(congress=None):
     if congress:
         cong =congress.split(',')
     else: 
-        cong = ['99','100','101','102','103','104','105','106','107','108','109','110','111','112','113','114','115']
+        cong = ['99','100','101','102','103','104','105','106','107','108','109','110','111','112','113','114','115','116']
     for c in cong:
         call(["/anaconda3/gpo/mods.py",c,str(int(c)+1),"{0}/log.txt".format(resultDir),_get_config_parameter('api','token')])
     return "{0}/dsl_tasks/{1}".format(_get_config_parameter('api','base_url'),task_id)
